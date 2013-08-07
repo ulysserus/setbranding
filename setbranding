@@ -1,0 +1,24 @@
+#!/bin/bash
+
+new="$1"
+
+if [ -z "$new" ]
+then
+	rpm -qa branding-\* --qf '%{name}\n'
+else
+	# Strict branding name
+	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
+	echo -n "Change branding to $new? [Y/n] "
+	read choice
+	test "+$choice" = "+n" && exit
+	packages="$(rpm -qa branding-\* --qf '%{name} ')"
+	removed="$(echo $packages| sed 's/ /- /g')-"
+	#apt-get update
+	
+	# Build list of packages with exclude missed packages
+	installed="$(echo $packages| tr ' ' '\n' | cut -f4 -d- | sed "s/^/branding-$new-/"|sort)"
+	installed="`comm -12 <(echo "$installed"|tr ' ' '\n') <(apt-cache pkgnames branding-$new|sort)`"
+	#echo $installed $removed | tr ' ' '\n'
+	apt-get install $installed $removed
+    make-initrd
+fi
