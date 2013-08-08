@@ -28,6 +28,11 @@ EOF
     exit
 }
 
+show_priv() {
+    echo "Change branding requires root privileges. Program is terminated."
+    exit 1
+}
+
 if [ -z "$new" ]
 then
 
@@ -38,6 +43,9 @@ else
 
     # Show usage information
     test "$new" = "--help" && show_usage
+
+    # Check privileges
+    test -w "/boot/grub/grub.cfg" || show_priv
 
 	# Strict branding name
 	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
