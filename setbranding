@@ -2,10 +2,43 @@
 
 new="$1"
 
+show_usage() {
+    cat <<EOF
+Usage: setbranding [options] [<new_branding_name>]
+
+Program shows or change current branding
+
+Valid options are:
+  --help    display help screen
+
+  <new_branding_name> is full two-word or short name of branding
+
+Examples:
+
+  # setbranding
+
+  Run program without branding name displays current branding packages
+
+  # setbranding altlinux-centaurus
+
+  Change branding to altlinux-centaurus (altlinux- may be omitted)
+
+Report bugs to http://bugs.altlinux.org
+EOF
+    exit
+}
+
 if [ -z "$new" ]
 then
+
+    # Show installed branding pacakges
 	rpm -qa branding-\* --qf '%{name}\n'
+
 else
+
+    # Show usage information
+    test "$new" = "--help" && show_usage
+
 	# Strict branding name
 	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
 	echo -n "Change branding to $new? [Y/n] "
