@@ -19,6 +19,13 @@ else
 	installed="$(echo $packages| tr ' ' '\n' | cut -f4 -d- | sed "s/^/branding-$new-/"|sort)"
 	installed="`comm -12 <(echo "$installed"|tr ' ' '\n') <(apt-cache pkgnames branding-$new|sort)`"
 	#echo $installed $removed | tr ' ' '\n'
+
+    # Replace old branding with new one
 	apt-get install $installed $removed
+
+    # Update Grub theme
+    grub-mkconfig -o /boot/grub/grub.cfg
+
+    # Generate newt bootsplash
     make-initrd
 fi
