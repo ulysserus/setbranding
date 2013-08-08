@@ -37,7 +37,7 @@ if [ -z "$new" ]
 then
 
     # Show installed branding pacakges
-	rpm -qa branding-\* --qf '%{name}\n'
+	/bin/rpm -qa branding-\* --qf '%{name}\n'
 
 else
 
@@ -62,11 +62,11 @@ else
 	#echo $installed $removed | tr ' ' '\n'
 
     # Replace old branding with new one
-	apt-get install $installed $removed
+	/usr/bin/apt-get install $installed $removed
 
     # Update Grub theme
-    grub-mkconfig -o /boot/grub/grub.cfg
+    /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
 
     # Generate newt bootsplash
-    make-initrd
+    /usr/sbin/make-initrd
 fi
