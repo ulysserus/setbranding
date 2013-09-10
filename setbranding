@@ -9,6 +9,7 @@ Usage: setbranding [options] [<new_branding_name>]
 Program shows or change current branding
 
 Valid options are:
+  -l        list all available brandings
   --help    display help screen
 
   <new_branding_name> is full two-word or short name of branding
@@ -18,6 +19,10 @@ Examples:
   # setbranding
 
   Run program without branding name displays current branding packages
+
+  # setbranding -l
+
+  Display all available brandings
 
   # setbranding altlinux-centaurus
 
@@ -33,6 +38,11 @@ show_priv() {
     exit 1
 }
 
+show_branding_list() {
+	apt-cache search --names-only branding release|sed -e 's/^branding-\(.\+\)-release .*$/\1/g' |sort
+	exit 1
+}
+
 if [ -z "$new" ]
 then
 
@@ -43,6 +53,9 @@ else
 
     # Show usage information
     test "$new" = "--help" && show_usage
+
+	# Show available brandings
+	test "$new" = "-l" && show_branding_list
 
     # Check privileges
     test -w "/boot/grub/grub.cfg" || show_priv
