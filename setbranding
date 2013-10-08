@@ -4,7 +4,7 @@ new="$1"
 _VERBOSE=""
 
 show_usage() {
-    cat <<EOF
+	cat <<EOF
 Usage: setbranding [options] [<new_branding_name>]
 
 Program shows or change current branding
@@ -12,32 +12,32 @@ Program shows or change current branding
 Valid options are:
   -l        list all available brandings
   -v        verbose output
-  --help    display help screen
+  -h,--help display help screen
 
-  <new_branding_name> is full two-word or short name of branding
+<new_branding_name> is full two-word or short name of branding
 
 Examples:
 
   # setbranding
 
-  Run program without branding name displays current branding packages
+Run program without branding name displays current branding packages
 
   # setbranding -l
 
-  Display all available brandings
+Display all available brandings
 
   # setbranding altlinux-centaurus
 
-  Change branding to altlinux-centaurus (altlinux- may be omitted)
+Change branding to altlinux-centaurus (altlinux- may be omitted)
 
 Report bugs to http://bugs.altlinux.org
 EOF
-    exit
+	exit
 }
 
 show_priv() {
-    echo "Change branding requires root privileges. Program is terminated."
-    exit 1
+	echo "Change branding requires root privileges. Program is terminated."
+	exit 1
 }
 
 show_branding_list() {
@@ -48,22 +48,31 @@ show_branding_list() {
 if [ -z "$new" ]
 then
 
-    # Show installed branding pacakges
+	# Show installed branding pacakges
 	/bin/rpm -qa branding-\* --qf '%{name}\n'
 
 else
 
-    # Show usage information
-    test "$new" = "--help" && show_usage
+	# Show usage information
+	if [ "$new" = "--help" -o "$new" = "-h" ] ; then
+		show_usage
+	fi
 
-    # Show available brandings
-    test "$new" = "-l" && show_branding_list
+	# Show available brandings
+	test "$new" = "-l" && show_branding_list
 
-    # Verbose output
-    test "$new" = "-v" && _VERBOSE="1"
+	# Verbose output
+	if [ "$new" = "-v" ] ; then
+		_VERBOSE="1"
+		if [ "$#" -lt 2 ] ; then
+			show_usage
+		else
+			new="$2"
+		fi
+	fi
 
-    # Check privileges
-    test -w "/boot/grub/grub.cfg" || show_priv
+	# Check privileges
+	test -w "/boot/grub/grub.cfg" || show_priv
 
 	# Strict branding name
 	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
@@ -73,23 +82,23 @@ else
 	packages="$(rpm -qa branding-\* --qf '%{name} ')"
 	removed="$(echo $packages| sed 's/ /- /g')-"
 	#apt-get update
-	
+
 	# Build list of packages with exclude missed packages
 	installed="$(echo $packages| tr ' ' '\n' | cut -f4 -d- | sed "s/^/branding-$new-/"|sort)"
 	installed="`comm -12 <(echo "$installed"|tr ' ' '\n') <(apt-cache pkgnames branding-$new|sort)`"
 	#echo $installed $removed | tr ' ' '\n'
 
-    # Show apt-get with parameters
-    test -n "$_VERBOSE" && echo "RUN /usr/bin/apt-get install $installed $removed"
+	# Show apt-get with parameters
+	test -n "$_VERBOSE" && echo "RUN /usr/bin/apt-get install $installed $removed"
 
-    # Replace old branding with new one
+	# Replace old branding with new one
 	/usr/bin/apt-get install $installed $removed
 
-    # Update Grub theme
-    test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
-    /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+	# Update Grub theme
+	test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
+	/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
 
-    # Generate newt bootsplash
-    test -n "$_VERBOSE" && echo "RUN /usr/sbin/make-initrd"
-    /usr/sbin/make-initrd
+	# Generate newt bootsplash
+	test -n "$_VERBOSE" && echo "RUN /usr/sbin/make-initrd"
+	/usr/sbin/make-initrd
 fi
