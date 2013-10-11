@@ -79,20 +79,32 @@ else
 	echo -n "Change branding to $new? [Y/n] "
 	read choice
 	test "+$choice" = "+n" && exit
-	packages="$(rpm -qa branding-\* --qf '%{name} ')"
-	removed="$(echo $packages| sed 's/ /- /g')-"
+	packages="$(rpm -qa branding-\* --qf '%{name}\n')"
+	removed="$(echo $packages| tr ' ' '\n' | grep -v "^branding-$new-"| sed 's/$/-/')"
 	#apt-get update
 
 	# Build list of packages with exclude missed packages
-	installed="$(echo $packages| tr ' ' '\n' | cut -f4 -d- | sed "s/^/branding-$new-/"|sort)"
-	installed="`comm -12 <(echo "$installed"|tr ' ' '\n') <(apt-cache pkgnames branding-$new|sort)`"
+	installed="$(echo $packages | tr ' ' '\n' | cut -f4 -d- | sed "s/^/branding-$new-/"|sort)"
+	installed="`comm -12 <(echo "$installed") <(apt-cache pkgnames branding-$new|sort)`"
 	#echo $installed $removed | tr ' ' '\n'
+
+	# Exit if no installed or removed packages are found
+	test -z "$installed" -a -z "$removed" && exit 0
 
 	# Show apt-get with parameters
 	test -n "$_VERBOSE" && echo "RUN /usr/bin/apt-get install $installed $removed"
 
+	# Store old rpm names
+	before="$(rpm -qa branding-\* --qf '%{name}-%{version}-%{release}\n')"
+
 	# Replace old branding with new one
 	/usr/bin/apt-get install $installed $removed
+
+	difference="`sort <(echo "$before") <(rpm -qa branding-\* --qf '%{name}-%{version}-%{release}\n') | uniq -u`"
+	test -n "$_VERBOSE" && echo "DIFFERENCE: $difference"
+
+	# If no changes don't update initrd and grub
+	test -z "$difference" && exit 0
 
 	# Update Grub theme
 	test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"

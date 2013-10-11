@@ -27,7 +27,8 @@ install -Dm755 %SOURCE0 %buildroot%_bindir/%name
 %changelog
 * Tue Oct 08 2013 Andrey Cherepanov <cas@altlinux.org> 1.1.1-alt1
 - Abort script on apt-get interrupt
-- support verbose output
+- Support verbose output
+- Ignore switch to already used branding
 
 * Tue Sep 10 2013 Andrey Cherepanov <cas@altlinux.org> 1.1.0-alt1
 - Add -l option for display list of all available brandings
