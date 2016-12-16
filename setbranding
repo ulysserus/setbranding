@@ -49,7 +49,7 @@ if [ -z "$new" ]
 then
 
 	# Show installed branding pacakges
-	/bin/rpm -qa branding-\* --qf '%{name}\n'
+	rpm -qa branding-\* --qf '%{name}\n'
 
 else
 
