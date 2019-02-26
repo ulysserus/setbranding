@@ -70,10 +70,18 @@ else
 			new="$2"
 		fi
 	fi
-
+	
 	# Check privileges
+	if [ "$(whoami)" != "root" ]; then
+		show_priv
+	fi
+	
+	# Check available grub.cfg
 	test -w "/boot/grub/grub.cfg" || show_priv
-
+	
+	# Check available grub2
+	test -x /usr/sbin/grub-mkconfig && _GRUB='1' || unset _GRUB
+	
 	# Strict branding name
 	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
 	echo -n "Change branding to $new? [Y/n] "
@@ -107,9 +115,11 @@ else
 	test -z "$difference" && exit 0
 
 	# Update Grub theme
-	test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
-	/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
-
+	if [ -n "$_GRUB" ]; then
+		test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
+		/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+	fi
+	
 	# Generate newt bootsplash
 	test -n "$_VERBOSE" && echo "RUN /usr/sbin/make-initrd"
 	/usr/sbin/make-initrd
