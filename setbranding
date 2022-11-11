@@ -35,11 +35,6 @@ EOF
 	exit
 }
 
-show_priv() {
-	echo "Change branding requires root privileges. Program is terminated."
-	exit 1
-}
-
 show_branding_list() {
 	apt-cache search --names-only branding release|sed -e 's/^branding-\(.\+\)-release .*$/\1/g' |sort
 	exit 1
@@ -73,14 +68,9 @@ else
 	
 	# Check privileges
 	if [ "$(whoami)" != "root" ]; then
-		show_priv
+		echo "Change branding requires root privileges. Program is terminated."
+		exit 1
 	fi
-	
-	# Check available grub.cfg
-	test -w "/boot/grub/grub.cfg" || show_priv
-	
-	# Check available grub2
-	test -x /usr/sbin/grub-mkconfig && _GRUB='1' || unset _GRUB
 	
 	# Strict branding name
 	echo "$new" | grep '-' >/dev/null || new="altlinux-$new"
@@ -114,10 +104,18 @@ else
 	# If no changes don't update initrd and grub
 	test -z "$difference" && exit 0
 
-	# Update Grub theme
-	if [ -n "$_GRUB" ]; then
-		test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
-		/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+	# Update Grub theme if grub exists
+	# Check available grub2
+	if [ -x /usr/sbin/grub-mkconfig ]; then
+		# Check available grub.cfg
+		if [ -w /boot/grub/grub.cfg ]; then
+			test -n "$_VERBOSE" && echo "RUN /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg"
+			/usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg
+		else
+			echo "Warning: /boot/grub/grub.cfg not accessible. Skipping grub setup."
+		fi
+	else
+		echo "grub-mkconfig not found Skipping grub setup."
 	fi
 	
 	# Generate newt bootsplash
